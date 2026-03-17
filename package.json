@@ -1,0 +1,158 @@
+{
+  "name": "llm-translate",
+  "displayName": "LLM Translate",
+  "description": "Translate workspace documents and code comments with a configurable remote or local LLM.",
+  "version": "0.0.1",
+  "publisher": "shezw",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "translation",
+    "llm",
+    "markdown",
+    "comments",
+    "documentation"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "files": [
+    "dist",
+    "media",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "docs"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "llmTranslate.translateFile",
+        "title": "Translate Current File",
+        "icon": {
+          "light": "media/translate-light.svg",
+          "dark": "media/translate-dark.svg"
+        }
+      },
+      {
+        "command": "llmTranslate.refreshFile",
+        "title": "Refresh Translation",
+        "icon": {
+          "light": "media/refresh-light.svg",
+          "dark": "media/refresh-dark.svg"
+        }
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "llmTranslate.translateFile",
+          "when": "resourceScheme == file && llmTranslate.isSupported && !llmTranslate.hasTranslation",
+          "group": "navigation@100"
+        },
+        {
+          "command": "llmTranslate.refreshFile",
+          "when": "resourceScheme == file && llmTranslate.isSupported && llmTranslate.hasTranslation",
+          "group": "navigation@100"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "llmTranslate.translateFile",
+          "when": "resourceScheme == file"
+        },
+        {
+          "command": "llmTranslate.refreshFile",
+          "when": "resourceScheme == file"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "LLM Translate",
+      "properties": {
+        "llmTranslate.provider": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "openai-compatible",
+            "ollama"
+          ],
+          "default": "auto",
+          "description": "LLM API provider mode. Auto tries to infer the request and response shape from the endpoint."
+        },
+        "llmTranslate.endpoint": {
+          "type": "string",
+          "default": "",
+          "description": "HTTP endpoint for the remote or local LLM service, such as an OpenAI-compatible /v1/chat/completions URL or Ollama /api/chat URL."
+        },
+        "llmTranslate.model": {
+          "type": "string",
+          "default": "",
+          "description": "Model name sent to the LLM service."
+        },
+        "llmTranslate.authMode": {
+          "type": "string",
+          "enum": [
+            "none",
+            "bearer",
+            "header"
+          ],
+          "default": "none",
+          "description": "Authentication strategy for the configured LLM endpoint."
+        },
+        "llmTranslate.authToken": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Token value used when authMode is bearer. Prefer storing secrets in user settings."
+        },
+        "llmTranslate.authHeaderName": {
+          "type": "string",
+          "default": "Authorization",
+          "description": "Header name used when authMode is header."
+        },
+        "llmTranslate.authHeaderValue": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Header value used when authMode is header. Prefer storing secrets in user settings."
+        },
+        "llmTranslate.cacheRoot": {
+          "type": "string",
+          "default": "~/llm-translate",
+          "description": "Root folder used to store md5 cache files and translated outputs. A per-user subfolder is created automatically."
+        },
+        "llmTranslate.requestTimeoutMs": {
+          "type": "number",
+          "default": 120000,
+          "minimum": 5000,
+          "description": "Request timeout in milliseconds for a single translation call."
+        },
+        "llmTranslate.temperature": {
+          "type": "number",
+          "default": 0.1,
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Sampling temperature sent to the LLM API."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "tsc -p ./ --noEmit",
+    "package": "pnpm exec vsce package --yarn --no-dependencies --allow-missing-repository",
+    "vscode:prepublish": "pnpm exec tsc -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.6.2",
+    "typescript": "^5.8.2"
+  }
+}
