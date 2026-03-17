@@ -9,7 +9,9 @@ LLM Translate is a VS Code extension for translating workspace files with a conf
 ## What it does
 
 - Adds a translate icon to supported file editors.
-- Switches the icon to refresh when a translated cache already exists for the active file.
+- Uses the configured default target language when the editor title button cannot show a dropdown menu.
+- Adds nested right-click menus for translating or refreshing to Simplified Chinese, English, German, French, Japanese, and Korean.
+- Switches the icon to refresh when a translated cache already exists for the active file in the configured default target language.
 - Translates documentation files such as Markdown, MDX, TXT, RST, and AsciiDoc as full documents.
 - Translates code files by extracting comment blocks only, sending only those comment snippets to the LLM, and merging the translated comments back into the original source file while keeping them as valid comments.
 - Stores md5 cache files and translated outputs under a user-configurable directory, defaulting to `~/llm-translate/<user>/`.
@@ -19,8 +21,8 @@ LLM Translate is a VS Code extension for translating workspace files with a conf
 
 For a source file inside the current workspace, the extension writes two files under the configured cache root:
 
-- `$cacheRoot/$user/$pwd_$file.hash`
-- `$cacheRoot/$user/$pwd_$file_llm-trans.$ext`
+- `$cacheRoot/$user/$pwd_$file_$lang.hash`
+- `$cacheRoot/$user/$pwd_$file_$lang_llm-trans.$ext`
 
 The hash file contains the current source md5. If the md5 matches and a translated output exists, the extension reuses the cached translation instead of calling the LLM again.
 
@@ -66,6 +68,7 @@ Required settings:
 Optional settings:
 
 - `llmTranslate.provider`: `auto`, `openai-compatible`, or `ollama`.
+- `llmTranslate.defaultTargetLanguage`: `zh-CN`, `en`, `de`, `fr`, `ja`, or `ko`.
 - `llmTranslate.authMode`: `none`, `bearer`, or `header`.
 - `llmTranslate.authToken`
 - `llmTranslate.authHeaderName`
@@ -81,6 +84,7 @@ Example user settings:
   "llmTranslate.provider": "openai-compatible",
   "llmTranslate.endpoint": "https://your-llm.example.com/v1/chat/completions",
   "llmTranslate.model": "gpt-4.1-mini",
+  "llmTranslate.defaultTargetLanguage": "de",
   "llmTranslate.authMode": "bearer",
   "llmTranslate.authToken": "<token>",
   "llmTranslate.cacheRoot": "~/llm-translate"
@@ -113,6 +117,7 @@ Press `F5` in VS Code to launch the Extension Development Host.
 2. Load and run a local model around 0.5B to 8B, for example `llama-translate 8B`.
 3. Start the local API service.
 4. Open VS Code settings and fill in the matching endpoint, model name, and authentication mode for LLM Translate.
+5. Choose a default target language for the editor title button. Use the right-click `LLM Translate` menu when you need a different target language for a specific file.
 
 Example Ollama settings:
 
@@ -169,6 +174,8 @@ LLM Translate 是一个 VS Code 扩展，用于通过可配置的本地或远程
 - 如果当前文件已经存在翻译缓存，则图标切换为刷新。
 - 对 Markdown、MDX、TXT、RST、AsciiDoc 等文档类文件执行全文翻译。
 - 对代码类文件只提取注释和文档块内容，再分批发送给 LLM 翻译，最后回填到原文件中，并确保回填结果仍然保持为合法注释。
+- 如果编辑器标题栏图标无法提供下拉菜单，则会使用配置中的默认目标语言。
+- 右键菜单支持二级菜单，可按文件选择翻译到简体中文、英语、德语、法语、日语或韩语。
 - 将 md5 缓存文件和翻译产物存放在可配置目录中，默认路径为 `~/llm-translate/<user>/`。
 - 翻译执行期间会在侧边打开预览窗口，并在完成后刷新内容。
 
@@ -176,8 +183,8 @@ LLM Translate 是一个 VS Code 扩展，用于通过可配置的本地或远程
 
 对于工作区中的源文件，扩展会在配置的缓存目录下写入：
 
-- `$cacheRoot/$user/$pwd_$file.hash`
-- `$cacheRoot/$user/$pwd_$file_llm-trans.$ext`
+- `$cacheRoot/$user/$pwd_$file_$lang.hash`
+- `$cacheRoot/$user/$pwd_$file_$lang_llm-trans.$ext`
 
 `.hash` 文件存储当前源文件内容的 md5。当 md5 未变化且翻译结果已存在时，扩展会直接复用缓存，不再请求 LLM。
 
@@ -223,6 +230,7 @@ LLM Translate 是一个 VS Code 扩展，用于通过可配置的本地或远程
 可选项：
 
 - `llmTranslate.provider`
+- `llmTranslate.defaultTargetLanguage`
 - `llmTranslate.authMode`
 - `llmTranslate.authToken`
 - `llmTranslate.authHeaderName`
@@ -246,6 +254,7 @@ pnpm exec tsc -p ./
 2. 加载并运行一个 0.5B 到 8B 左右的模型，例如 `llama-translate 8B`。
 3. 启动本地 API 服务。
 4. 打开 VS Code 设置，在 LLM Translate 中填入对应的接口地址、模型名和鉴权方式。
+5. 为标题栏按钮设置默认目标语言；如果某个文件临时要翻译到别的语言，可以使用右键 `LLM Translate` 二级菜单。
 
 Ollama 示例：
 

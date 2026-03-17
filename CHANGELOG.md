@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.0.5
+
+- Added multi-language translation targets: Simplified Chinese, English, German, French, Japanese, and Korean.
+- Added nested `LLM Translate` context menus for language-specific translate and refresh actions.
+- Added a default target language setting for the editor title button.
+- Changed cache artifacts to be isolated per target language.
+- Updated prompts and documentation to include the selected target language.
+
 ## 0.0.4
 
 - Added localized right-click menu entry for LLM Translate.

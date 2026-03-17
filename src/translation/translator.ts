@@ -14,6 +14,7 @@ import {
   TRANSLATION_SYSTEM_PROMPT
 } from './prompts';
 import { getTranslationPlan } from './fileClassifier';
+import { TargetLanguage } from './targetLanguages';
 
 const MAX_COMMENT_BATCH_CHARS = 12000;
 
@@ -25,7 +26,7 @@ export class Translator {
     private readonly outputChannel: vscode.OutputChannel
   ) {}
 
-  async translate(sourceDocument: vscode.TextDocument, forceRefresh: boolean): Promise<void> {
+  async translate(sourceDocument: vscode.TextDocument, forceRefresh: boolean, targetLanguage: TargetLanguage): Promise<void> {
     const plan = getTranslationPlan(sourceDocument.uri.fsPath);
     if (plan.mode === 'unsupported') {
       throw new Error(`Unsupported file type: ${plan.extension || path.basename(sourceDocument.uri.fsPath)}`);
@@ -33,7 +34,7 @@ export class Translator {
 
     const sourceContent = sourceDocument.getText();
     const sourceHash = computeMd5(sourceContent);
-    const artifacts = await this.cacheManager.resolveArtifacts(sourceDocument.uri);
+    const artifacts = await this.cacheManager.resolveArtifacts(sourceDocument.uri, targetLanguage);
     const previewUri = await this.previewProvider.openPreview(
       sourceDocument.uri,
       `${path.basename(artifacts.translatedFilePath)}`,
@@ -41,8 +42,8 @@ export class Translator {
       sourceDocument.languageId
     );
 
-    if (!forceRefresh && (await this.cacheManager.isUpToDate(sourceDocument.uri, sourceHash))) {
-      const cachedTranslation = await this.cacheManager.readTranslation(sourceDocument.uri);
+    if (!forceRefresh && (await this.cacheManager.isUpToDate(sourceDocument.uri, sourceHash, targetLanguage))) {
+      const cachedTranslation = await this.cacheManager.readTranslation(sourceDocument.uri, targetLanguage);
       if (cachedTranslation !== undefined) {
         this.previewProvider.update(previewUri, cachedTranslation);
         this.outputChannel.appendLine(`[cache] reused translation: ${artifacts.translatedFilePath}`);
@@ -53,7 +54,8 @@ export class Translator {
     const metadata: PromptMetadata = {
       fileName: path.basename(sourceDocument.uri.fsPath),
       extension: plan.extension,
-      relativePath: artifacts.relativePath
+      relativePath: artifacts.relativePath,
+      targetLanguage
     };
 
     this.previewProvider.update(previewUri, 'LLM translation in progress...');
@@ -61,18 +63,18 @@ export class Translator {
       ? await this.translateDocument(sourceContent, metadata)
       : await this.translateCodeComments(sourceContent, metadata, plan.commentPattern!);
 
-    await this.cacheManager.write(sourceDocument.uri, sourceHash, translatedContent);
+    await this.cacheManager.write(sourceDocument.uri, sourceHash, translatedContent, targetLanguage);
     this.previewProvider.update(previewUri, translatedContent);
     this.outputChannel.appendLine(`[cache] wrote translation: ${artifacts.translatedFilePath}`);
   }
 
-  async getTranslatedFilePath(sourceUri: vscode.Uri): Promise<string> {
-    const artifacts = await this.cacheManager.resolveArtifacts(sourceUri);
+  async getTranslatedFilePath(sourceUri: vscode.Uri, targetLanguage: TargetLanguage): Promise<string> {
+    const artifacts = await this.cacheManager.resolveArtifacts(sourceUri, targetLanguage);
     return artifacts.translatedFilePath;
   }
 
-  async readTranslatedFile(sourceUri: vscode.Uri): Promise<string | undefined> {
-    const translatedFilePath = await this.getTranslatedFilePath(sourceUri);
+  async readTranslatedFile(sourceUri: vscode.Uri, targetLanguage: TargetLanguage): Promise<string | undefined> {
+    const translatedFilePath = await this.getTranslatedFilePath(sourceUri, targetLanguage);
 
     try {
       return await fs.readFile(translatedFilePath, 'utf8');

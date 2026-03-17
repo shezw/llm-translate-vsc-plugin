@@ -1,5 +1,6 @@
 import { NON_TRANSLATABLE_TOKEN_PATTERN } from '../constants';
 import { CommentPattern } from './commentPatterns';
+import { formatTargetLanguage, TargetLanguage } from './targetLanguages';
 
 export interface CommentTranslationItem {
   id: string;
@@ -18,6 +19,7 @@ export interface PromptMetadata {
   fileName: string;
   extension: string;
   relativePath: string;
+  targetLanguage: TargetLanguage;
 }
 
 export const TRANSLATION_SYSTEM_PROMPT = [
@@ -31,10 +33,11 @@ export const TRANSLATION_SYSTEM_PROMPT = [
 
 export function buildDocumentPrompt(metadata: PromptMetadata, content: string): string {
   return [
-    'Translate the full documentation file into Simplified Chinese.',
+    `Translate the full documentation file into ${formatTargetLanguage(metadata.targetLanguage)}.`,
     'Preserve the original file format exactly and keep code blocks executable.',
     'Translate human-readable prose, headings, tables, alt text, and inline comments inside fenced examples only when they are natural language.',
     'Do not change YAML front matter keys, markdown syntax, HTML tags, URLs, emails, or code identifiers.',
+    `Target language: ${formatTargetLanguage(metadata.targetLanguage)}`,
     `File name: ${metadata.fileName}`,
     `Extension: ${metadata.extension || '(none)'}`,
     `Relative path: ${metadata.relativePath}`,
@@ -45,10 +48,11 @@ export function buildDocumentPrompt(metadata: PromptMetadata, content: string): 
 
 export function buildCodePrompt(metadata: PromptMetadata, content: string, commentPattern: CommentPattern): string {
   return [
-    'Translate only comments and documentation text inside the source file into Simplified Chinese.',
+    `Translate only comments and documentation text inside the source file into ${formatTargetLanguage(metadata.targetLanguage)}.`,
     'Keep all executable code, imports, symbols, strings, numbers, URLs, emails, file paths, and configuration literals unchanged.',
     'Preserve comment delimiters, indentation, line breaks, and code layout exactly.',
     'If a comment mixes code tokens with natural language, translate only the natural language portions.',
+    `Target language: ${formatTargetLanguage(metadata.targetLanguage)}`,
     `File name: ${metadata.fileName}`,
     `Extension: ${metadata.extension || '(none)'}`,
     `Relative path: ${metadata.relativePath}`,
@@ -64,11 +68,12 @@ export function buildCodeCommentBatchPrompt(
   commentPattern: CommentPattern
 ): string {
   return [
-    'Translate only the human-readable parts of the extracted comments into Simplified Chinese.',
+    `Translate only the human-readable parts of the extracted comments into ${formatTargetLanguage(metadata.targetLanguage)}.`,
     'You are not translating the whole source file. You are translating comment snippets extracted from the file.',
     'Keep comment delimiters, indentation, leading stars, spacing, line breaks, URLs, emails, file paths, identifiers, versions, placeholders, and machine-readable literals unchanged.',
     'Return JSON only with this exact shape: {"translations":[{"id":"...","translatedComment":"..."}]}.',
     'Every input item must appear exactly once in the output. Do not omit or reorder items.',
+    `Target language: ${formatTargetLanguage(metadata.targetLanguage)}`,
     `File name: ${metadata.fileName}`,
     `Extension: ${metadata.extension || '(none)'}`,
     `Relative path: ${metadata.relativePath}`,

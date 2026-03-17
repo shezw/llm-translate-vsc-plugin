@@ -1,10 +1,12 @@
 import * as vscode from 'vscode';
 
 import { CacheManager } from './cache/cacheManager';
+import { getSettings } from './config';
 import { PREVIEW_SCHEME } from './constants';
 import { LlmClient } from './llm/client';
 import { TranslationPreviewProvider } from './preview/previewProvider';
 import { getTranslationPlan } from './translation/fileClassifier';
+import { TargetLanguage, TARGET_LANGUAGES } from './translation/targetLanguages';
 import { Translator } from './translation/translator';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
@@ -20,15 +22,29 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   context.subscriptions.push(
     vscode.commands.registerCommand('llmTranslate.translateFile', async (resource?: vscode.Uri) => {
-      await runTranslation(translator, cacheManager, resource, false);
+      await runTranslation(translator, cacheManager, resource, false, getSettings().defaultTargetLanguage);
     })
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand('llmTranslate.refreshFile', async (resource?: vscode.Uri) => {
-      await runTranslation(translator, cacheManager, resource, true);
+      await runTranslation(translator, cacheManager, resource, true, getSettings().defaultTargetLanguage);
     })
   );
+
+  for (const language of TARGET_LANGUAGES) {
+    context.subscriptions.push(
+      vscode.commands.registerCommand(`llmTranslate.translate.${language.id}`, async (resource?: vscode.Uri) => {
+        await runTranslation(translator, cacheManager, resource, false, language.id);
+      })
+    );
+
+    context.subscriptions.push(
+      vscode.commands.registerCommand(`llmTranslate.refresh.${language.id}`, async (resource?: vscode.Uri) => {
+        await runTranslation(translator, cacheManager, resource, true, language.id);
+      })
+    );
+  }
 
   const updateContext = async (editor: vscode.TextEditor | undefined): Promise<void> => {
     const sourceUri = editor?.document.uri;
@@ -43,7 +59,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       return;
     }
 
-    const hasTranslation = await cacheManager.hasTranslation(sourceUri);
+    const hasTranslation = await cacheManager.hasTranslation(sourceUri, getSettings().defaultTargetLanguage);
     await setContext(true, hasTranslation);
   };
 
@@ -63,7 +79,8 @@ async function runTranslation(
   translator: Translator,
   cacheManager: CacheManager,
   resource: vscode.Uri | undefined,
-  forceRefresh: boolean
+  forceRefresh: boolean,
+  targetLanguage: TargetLanguage
 ): Promise<void> {
   const sourceDocument = await resolveSourceDocument(resource);
   if (!sourceDocument) {
@@ -72,11 +89,11 @@ async function runTranslation(
   }
 
   try {
-    await translator.translate(sourceDocument, forceRefresh);
-    const hasTranslation = await cacheManager.hasTranslation(sourceDocument.uri);
+    await translator.translate(sourceDocument, forceRefresh, targetLanguage);
+    const hasTranslation = await cacheManager.hasTranslation(sourceDocument.uri, getSettings().defaultTargetLanguage);
     await setContext(true, hasTranslation);
 
-    const translatedFilePath = await translator.getTranslatedFilePath(sourceDocument.uri);
+    const translatedFilePath = await translator.getTranslatedFilePath(sourceDocument.uri, targetLanguage);
     void vscode.window.setStatusBarMessage(`LLM Translate ready: ${translatedFilePath}`, 5000);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

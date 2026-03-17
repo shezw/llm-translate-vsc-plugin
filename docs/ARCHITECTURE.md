@@ -5,6 +5,7 @@
 - Add a file-level translate action to supported editors.
 - Reuse cached translations whenever the source md5 is unchanged.
 - Support both document translation and comment-only code translation.
+- Support multiple target languages with per-language commands and cache artifacts.
 - Allow configurable local or remote LLM endpoints and authentication.
 
 ## Main modules
@@ -15,6 +16,8 @@ Registers commands, preview provider, editor-title actions, and dynamic context 
 
 - `llmTranslate.isSupported`
 - `llmTranslate.hasTranslation`
+
+The editor title action uses the configured default target language. Context menus expose nested language-specific translate and refresh actions.
 
 ### `src/translation/translator.ts`
 
@@ -37,8 +40,8 @@ Generates the cache directory and filenames, writes hash metadata, and stores tr
 
 Naming strategy:
 
-- Hash: `$pwd_$file.hash`
-- Translation: `$pwd_$file_llm-trans.$ext`
+- Hash: `$pwd_$file_$lang.hash`
+- Translation: `$pwd_$file_$lang_llm-trans.$ext`
 
 Both files live under `$cacheRoot/$user/`.
 
@@ -61,6 +64,8 @@ Extracts comment snippets from non-document source files, batches them into smal
 ### `src/translation/prompts.ts`
 
 Stores the translation system prompt and specialized document/code prompts.
+
+All prompts include the selected target language so the LLM knows exactly which language to produce.
 
 This file is the intended place for later prompt tuning.
 
@@ -95,6 +100,7 @@ Editor title command
 
 - The extension assumes the target API is either OpenAI-compatible or Ollama chat.
 - Document mode still sends the full document to the LLM, so very large documentation files remain constrained by the model context window.
+- The refresh icon state is based on whether a translated cache file exists for the currently configured default target language.
 - Refresh state is driven by whether a translated cache file already exists for the active source file.
 - Translation preview is virtual and read-only; the persisted output is stored in the cache directory.
 

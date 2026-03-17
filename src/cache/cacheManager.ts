@@ -6,6 +6,7 @@ import * as vscode from 'vscode';
 
 import { getSettings } from '../config';
 import { getTranslationPlan } from '../translation/fileClassifier';
+import { TargetLanguage } from '../translation/targetLanguages';
 
 interface HashPayload {
   sourceHash: string;
@@ -27,7 +28,7 @@ export function computeMd5(content: string): string {
 }
 
 export class CacheManager {
-  async resolveArtifacts(sourceUri: vscode.Uri): Promise<CacheArtifacts> {
+  async resolveArtifacts(sourceUri: vscode.Uri, targetLanguage: TargetLanguage): Promise<CacheArtifacts> {
     const cacheRoot = expandHome(getSettings().cacheRoot);
     const userName = sanitizeSegment(os.userInfo().username || 'user');
     const cacheDir = path.join(cacheRoot, userName);
@@ -39,7 +40,7 @@ export class CacheManager {
     const parsedPath = path.parse(relativePath);
     const workspaceKey = sanitizeSegment(workspaceFolder?.uri.fsPath ?? path.dirname(sourceUri.fsPath));
     const fileKey = sanitizeSegment(path.join(parsedPath.dir, parsedPath.name) || parsedPath.name);
-    const cacheBaseName = `${workspaceKey}_${fileKey}`;
+    const cacheBaseName = `${workspaceKey}_${fileKey}_${sanitizeSegment(targetLanguage)}`;
     const extension = parsedPath.ext || getTranslationPlan(sourceUri.fsPath).extension || '.txt';
 
     return {
@@ -51,13 +52,13 @@ export class CacheManager {
     };
   }
 
-  async hasTranslation(sourceUri: vscode.Uri): Promise<boolean> {
-    const artifacts = await this.resolveArtifacts(sourceUri);
+  async hasTranslation(sourceUri: vscode.Uri, targetLanguage: TargetLanguage): Promise<boolean> {
+    const artifacts = await this.resolveArtifacts(sourceUri, targetLanguage);
     return pathExists(artifacts.translatedFilePath);
   }
 
-  async readTranslation(sourceUri: vscode.Uri): Promise<string | undefined> {
-    const artifacts = await this.resolveArtifacts(sourceUri);
+  async readTranslation(sourceUri: vscode.Uri, targetLanguage: TargetLanguage): Promise<string | undefined> {
+    const artifacts = await this.resolveArtifacts(sourceUri, targetLanguage);
     if (!(await pathExists(artifacts.translatedFilePath))) {
       return undefined;
     }
@@ -65,8 +66,8 @@ export class CacheManager {
     return fs.readFile(artifacts.translatedFilePath, 'utf8');
   }
 
-  async isUpToDate(sourceUri: vscode.Uri, sourceHash: string): Promise<boolean> {
-    const artifacts = await this.resolveArtifacts(sourceUri);
+  async isUpToDate(sourceUri: vscode.Uri, sourceHash: string, targetLanguage: TargetLanguage): Promise<boolean> {
+    const artifacts = await this.resolveArtifacts(sourceUri, targetLanguage);
     const hashPayload = await this.readHashPayload(artifacts.hashFilePath);
     if (!hashPayload) {
       return false;
@@ -79,8 +80,8 @@ export class CacheManager {
     return hashPayload.sourceHash === sourceHash;
   }
 
-  async write(sourceUri: vscode.Uri, sourceHash: string, translatedContent: string): Promise<CacheArtifacts> {
-    const artifacts = await this.resolveArtifacts(sourceUri);
+  async write(sourceUri: vscode.Uri, sourceHash: string, translatedContent: string, targetLanguage: TargetLanguage): Promise<CacheArtifacts> {
+    const artifacts = await this.resolveArtifacts(sourceUri, targetLanguage);
     await fs.mkdir(artifacts.cacheDir, { recursive: true });
     await fs.writeFile(artifacts.translatedFilePath, translatedContent, 'utf8');
 

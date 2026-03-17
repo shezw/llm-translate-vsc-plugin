@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 
 import { DEFAULT_CACHE_ROOT, EXTENSION_NAMESPACE } from './constants';
+import { TargetLanguage } from './translation/targetLanguages';
 
 export type ProviderMode = 'auto' | 'openai-compatible' | 'ollama';
 export type AuthMode = 'none' | 'bearer' | 'header';
@@ -9,6 +10,7 @@ export interface LlmTranslateSettings {
   provider: ProviderMode;
   endpoint: string;
   model: string;
+  defaultTargetLanguage: TargetLanguage;
   authMode: AuthMode;
   authToken: string;
   authHeaderName: string;
@@ -25,6 +27,7 @@ export function getSettings(): LlmTranslateSettings {
     provider: configuration.get<ProviderMode>('provider', 'auto'),
     endpoint: configuration.get<string>('endpoint', '').trim(),
     model: configuration.get<string>('model', '').trim(),
+    defaultTargetLanguage: configuration.get<TargetLanguage>('defaultTargetLanguage', 'zh-CN'),
     authMode: configuration.get<AuthMode>('authMode', 'none'),
     authToken: configuration.get<string>('authToken', '').trim(),
     authHeaderName: configuration.get<string>('authHeaderName', 'Authorization').trim(),
