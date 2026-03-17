@@ -80,10 +80,110 @@ export function applyCommentTranslations(
       continue;
     }
 
-    result = `${result.slice(0, segment.start)}${translatedComment}${result.slice(segment.end)}`;
+    const normalizedComment = normalizeTranslatedComment(segment.text, translatedComment);
+    result = `${result.slice(0, segment.start)}${normalizedComment}${result.slice(segment.end)}`;
   }
 
   return result;
+}
+
+function normalizeTranslatedComment(originalComment: string, translatedComment: string): string {
+  const normalizedTranslated = translatedComment.trim();
+  if (normalizedTranslated.length === 0) {
+    return originalComment;
+  }
+
+  const linePrefixMatch = originalComment.match(/^((?:\/\/\/|\/\/|###|##|#|--)\s*)/);
+  if (linePrefixMatch) {
+    const prefix = linePrefixMatch[1];
+    const body = stripKnownCommentSyntax(normalizedTranslated);
+    return `${prefix}${body.trim()}`;
+  }
+
+  const blockSyntax = detectBlockSyntax(originalComment);
+  if (blockSyntax) {
+    const innerBody = stripWrappedBlockSyntax(normalizedTranslated, blockSyntax.start, blockSyntax.end).trim();
+    return rebuildBlockComment(originalComment, innerBody, blockSyntax.start, blockSyntax.end);
+  }
+
+  return translatedComment;
+}
+
+function detectBlockSyntax(comment: string): { start: string; end: string } | undefined {
+  const blockMarkers: Array<{ start: string; end: string }> = [
+    { start: '/**', end: '*/' },
+    { start: '/*', end: '*/' },
+    { start: '<!--', end: '-->' },
+    { start: '--[[', end: ']]' }
+  ];
+
+  return blockMarkers.find(marker => comment.startsWith(marker.start) && comment.endsWith(marker.end));
+}
+
+function rebuildBlockComment(originalComment: string, translatedBody: string, startToken: string, endToken: string): string {
+  if (!originalComment.includes('\n')) {
+    const compactBody = translatedBody.replace(/\s+/g, ' ').trim();
+    return compactBody ? `${startToken} ${compactBody} ${endToken}` : `${startToken}${endToken}`;
+  }
+
+  const originalLines = originalComment.split(/\r?\n/);
+  const translatedLines = translatedBody.length > 0 ? translatedBody.split(/\r?\n/) : [''];
+  const starPrefixMatch = originalComment.match(/\n([ \t]*\* ?)/);
+  const closingLine = originalLines[originalLines.length - 1];
+  const closingIndent = closingLine.slice(0, Math.max(0, closingLine.indexOf(endToken)));
+
+  if (starPrefixMatch) {
+    return [
+      startToken,
+      ...translatedLines.map(line => `${starPrefixMatch[1]}${line.trim()}`),
+      `${closingIndent}${endToken}`
+    ].join('\n');
+  }
+
+  const innerIndent = detectInnerIndent(originalLines);
+  return [
+    startToken,
+    ...translatedLines.map(line => `${innerIndent}${line.trim()}`),
+    `${closingIndent}${endToken}`
+  ].join('\n');
+}
+
+function detectInnerIndent(lines: string[]): string {
+  for (let index = 1; index < lines.length - 1; index += 1) {
+    const match = lines[index].match(/^([ \t]+)/);
+    if (match) {
+      return match[1];
+    }
+  }
+
+  return '  ';
+}
+
+function stripKnownCommentSyntax(content: string): string {
+  return content
+    .replace(/^((?:\/\/\/|\/\/|###|##|#|--)\s*)/, '')
+    .replace(/^\/\*+/, '')
+    .replace(/\*\/$/, '')
+    .replace(/^<!--/, '')
+    .replace(/-->$/, '')
+    .replace(/^--\[\[/, '')
+    .replace(/\]\]$/, '')
+    .trim();
+}
+
+function stripWrappedBlockSyntax(content: string, startToken: string, endToken: string): string {
+  let value = content;
+  if (value.startsWith(startToken)) {
+    value = value.slice(startToken.length);
+  }
+  if (value.endsWith(endToken)) {
+    value = value.slice(0, value.length - endToken.length);
+  }
+
+  return value
+    .split(/\r?\n/)
+    .map(line => line.replace(/^[ \t]*\* ?/, ''))
+    .join('\n');
 }
 
 export function splitCommentsIntoBatches(segments: ExtractedComment[], maxBatchChars: number): ExtractedComment[][] {
