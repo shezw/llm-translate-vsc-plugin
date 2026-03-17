@@ -1,6 +1,19 @@
 import { NON_TRANSLATABLE_TOKEN_PATTERN } from '../constants';
 import { CommentPattern } from './commentPatterns';
 
+export interface CommentTranslationItem {
+  id: string;
+  text: string;
+  line: number;
+}
+
+export interface CommentTranslationResult {
+  translations: Array<{
+    id: string;
+    translatedComment: string;
+  }>;
+}
+
 export interface PromptMetadata {
   fileName: string;
   extension: string;
@@ -43,4 +56,46 @@ export function buildCodePrompt(metadata: PromptMetadata, content: string, comme
     'Original content starts below:',
     content
   ].join('\n\n');
+}
+
+export function buildCodeCommentBatchPrompt(
+  metadata: PromptMetadata,
+  items: CommentTranslationItem[],
+  commentPattern: CommentPattern
+): string {
+  return [
+    'Translate only the human-readable parts of the extracted comments into Simplified Chinese.',
+    'You are not translating the whole source file. You are translating comment snippets extracted from the file.',
+    'Keep comment delimiters, indentation, leading stars, spacing, line breaks, URLs, emails, file paths, identifiers, versions, placeholders, and machine-readable literals unchanged.',
+    'Return JSON only with this exact shape: {"translations":[{"id":"...","translatedComment":"..."}]}.',
+    'Every input item must appear exactly once in the output. Do not omit or reorder items.',
+    `File name: ${metadata.fileName}`,
+    `Extension: ${metadata.extension || '(none)'}`,
+    `Relative path: ${metadata.relativePath}`,
+    `Comment rule dictionary: ${JSON.stringify(commentPattern, null, 2)}`,
+    'Extracted comments JSON starts below:',
+    JSON.stringify(items, null, 2)
+  ].join('\n\n');
+}
+
+export function parseCommentTranslationResult(content: string): CommentTranslationResult {
+  const trimmed = content.trim();
+  const jsonText = extractJsonPayload(trimmed);
+  const parsed = JSON.parse(jsonText) as CommentTranslationResult;
+
+  if (!parsed || !Array.isArray(parsed.translations)) {
+    throw new Error('LLM response did not contain a valid translations array.');
+  }
+
+  return parsed;
+}
+
+function extractJsonPayload(content: string): string {
+  const firstBrace = content.indexOf('{');
+  const lastBrace = content.lastIndexOf('}');
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+    throw new Error('LLM response did not contain JSON content.');
+  }
+
+  return content.slice(firstBrace, lastBrace + 1);
 }

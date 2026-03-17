@@ -1,3 +1,5 @@
+[English](https://github.com/shezw/llm-translate-vsc-plugin/blob/main/README.md) | [简体中文](https://github.com/shezw/llm-translate-vsc-plugin/blob/main/README.zh-CN.md)
+
 # LLM Translate
 
 LLM Translate is a VS Code extension for translating workspace files with a configurable local or remote LLM service.
@@ -7,7 +9,7 @@ LLM Translate is a VS Code extension for translating workspace files with a conf
 - Adds a translate icon to supported file editors.
 - Switches the icon to refresh when a translated cache already exists for the active file.
 - Translates documentation files such as Markdown, MDX, TXT, RST, and AsciiDoc as full documents.
-- Translates code files by targeting comments and documentation blocks only.
+- Translates code files by extracting comment blocks only, sending only those comment snippets to the LLM, and merging the translated comments back into the original source file.
 - Stores md5 cache files and translated outputs under a user-configurable directory, defaulting to `~/llm-translate/<user>/`.
 - Opens a side-by-side preview document while the translation is running and updates the preview when the translation finishes.
 
@@ -37,7 +39,7 @@ Current extensions:
 
 ### Code mode
 
-Comment-only translation using a built-in comment rule dictionary for common source files.
+Comment-only translation using a built-in comment rule dictionary for common source files. The extension does not send the full code file to the LLM in this mode.
 
 Current extensions include:
 

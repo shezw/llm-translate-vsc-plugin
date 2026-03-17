@@ -1,0 +1,17 @@
+{
+  "displayName": "LLM Translate",
+  "description": "Translate workspace documents and code comments with a configurable remote or local LLM.",
+  "command.translate.title": "Translate Current File",
+  "command.refresh.title": "Refresh Translation",
+  "configuration.title": "LLM Translate",
+  "configuration.provider.description": "LLM API provider mode. Auto tries to infer the request and response shape from the endpoint.",
+  "configuration.endpoint.description": "HTTP endpoint for the remote or local LLM service, such as an OpenAI-compatible /v1/chat/completions URL or Ollama /api/chat URL.",
+  "configuration.model.description": "Model name sent to the LLM service.",
+  "configuration.authMode.description": "Authentication strategy for the configured LLM endpoint.",
+  "configuration.authToken.description": "Token value used when authMode is bearer. Prefer storing secrets in user settings.",
+  "configuration.authHeaderName.description": "Header name used when authMode is header.",
+  "configuration.authHeaderValue.description": "Header value used when authMode is header. Prefer storing secrets in user settings.",
+  "configuration.cacheRoot.description": "Root folder used to store md5 cache files and translated outputs. A per-user subfolder is created automatically.",
+  "configuration.requestTimeoutMs.description": "Request timeout in milliseconds for a single translation call.",
+  "configuration.temperature.description": "Sampling temperature sent to the LLM API."
+}

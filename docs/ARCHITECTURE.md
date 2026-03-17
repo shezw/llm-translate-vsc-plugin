@@ -24,10 +24,12 @@ Coordinates the end-to-end flow:
 2. Compute source md5.
 3. Open a side preview.
 4. Reuse cached output when available and unchanged.
-5. Build the translation prompt.
-6. Call the configured LLM.
-7. Persist the translated output and hash metadata.
-8. Update the preview and UI state.
+5. For code files, extract comment snippets and split them into batches.
+6. Build the translation prompt.
+7. Call the configured LLM.
+8. Merge translated comments back into the original source file when needed.
+9. Persist the translated output and hash metadata.
+10. Update the preview and UI state.
 
 ### `src/cache/cacheManager.ts`
 
@@ -51,6 +53,10 @@ Determines whether a file should be handled as:
 ### `src/translation/commentPatterns.ts`
 
 Contains the comment syntax dictionary for common file types. This dictionary is also passed to the LLM prompt for code translation mode.
+
+### `src/translation/commentExtractor.ts`
+
+Extracts comment snippets from non-document source files, batches them into smaller payloads for the LLM, and applies translated comment text back onto the original source content.
 
 ### `src/translation/prompts.ts`
 
@@ -78,7 +84,9 @@ Editor title command
   -> extension command handler
   -> translator
   -> cache md5 check
+  -> comment extraction for code files
   -> LLM call when needed
+  -> merge translated comments for code files
   -> write hash + translated file
   -> update preview
 ```
@@ -86,6 +94,7 @@ Editor title command
 ## Current constraints
 
 - The extension assumes the target API is either OpenAI-compatible or Ollama chat.
+- Document mode still sends the full document to the LLM, so very large documentation files remain constrained by the model context window.
 - Refresh state is driven by whether a translated cache file already exists for the active source file.
 - Translation preview is virtual and read-only; the persisted output is stored in the cache directory.
 

@@ -1,0 +1,17 @@
+{
+  "displayName": "LLM Translate",
+  "description": "使用可配置的本地或远程 LLM 翻译工作区文档和代码注释。",
+  "command.translate.title": "翻译当前文件",
+  "command.refresh.title": "刷新翻译",
+  "configuration.title": "LLM Translate",
+  "configuration.provider.description": "LLM API 提供方模式。选择 auto 时会根据接口地址自动推断请求和响应格式。",
+  "configuration.endpoint.description": "本地或远程 LLM 服务的 HTTP 地址，例如 OpenAI 兼容的 /v1/chat/completions 或 Ollama 的 /api/chat。",
+  "configuration.model.description": "发送给 LLM 服务的模型名称。",
+  "configuration.authMode.description": "访问当前 LLM 接口时使用的鉴权策略。",
+  "configuration.authToken.description": "当 authMode 为 bearer 时使用的令牌值。更建议放在用户级设置中。",
+  "configuration.authHeaderName.description": "当 authMode 为 header 时使用的请求头名称。",
+  "configuration.authHeaderValue.description": "当 authMode 为 header 时使用的请求头值。更建议放在用户级设置中。",
+  "configuration.cacheRoot.description": "存储 md5 缓存文件和翻译结果的根目录。扩展会自动创建按用户区分的子目录。",
+  "configuration.requestTimeoutMs.description": "单次翻译请求的超时时间，单位毫秒。",
+  "configuration.temperature.description": "发送给 LLM API 的采样温度。"
+}

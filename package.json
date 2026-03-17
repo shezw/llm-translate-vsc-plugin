@@ -1,7 +1,7 @@
 {
   "name": "llm-translate",
-  "displayName": "LLM Translate",
-  "description": "Translate workspace documents and code comments with a configurable remote or local LLM.",
+  "displayName": "%displayName%",
+  "description": "%description%",
   "version": "0.0.1",
   "publisher": "shezw",
   "license": "MIT",
@@ -26,15 +26,18 @@
     "dist",
     "media",
     "README.md",
+    "README.zh-CN.md",
     "CHANGELOG.md",
     "LICENSE",
-    "docs"
+    "docs",
+    "package.nls.json",
+    "package.nls.zh-cn.json"
   ],
   "contributes": {
     "commands": [
       {
         "command": "llmTranslate.translateFile",
-        "title": "Translate Current File",
+        "title": "%command.translate.title%",
         "icon": {
           "light": "media/translate-light.svg",
           "dark": "media/translate-dark.svg"
@@ -42,7 +45,7 @@
       },
       {
         "command": "llmTranslate.refreshFile",
-        "title": "Refresh Translation",
+        "title": "%command.refresh.title%",
         "icon": {
           "light": "media/refresh-light.svg",
           "dark": "media/refresh-dark.svg"
@@ -74,7 +77,7 @@
       ]
     },
     "configuration": {
-      "title": "LLM Translate",
+      "title": "%configuration.title%",
       "properties": {
         "llmTranslate.provider": {
           "type": "string",
@@ -84,17 +87,17 @@
             "ollama"
           ],
           "default": "auto",
-          "description": "LLM API provider mode. Auto tries to infer the request and response shape from the endpoint."
+          "description": "%configuration.provider.description%"
         },
         "llmTranslate.endpoint": {
           "type": "string",
           "default": "",
-          "description": "HTTP endpoint for the remote or local LLM service, such as an OpenAI-compatible /v1/chat/completions URL or Ollama /api/chat URL."
+          "description": "%configuration.endpoint.description%"
         },
         "llmTranslate.model": {
           "type": "string",
           "default": "",
-          "description": "Model name sent to the LLM service."
+          "description": "%configuration.model.description%"
         },
         "llmTranslate.authMode": {
           "type": "string",
@@ -104,43 +107,51 @@
             "header"
           ],
           "default": "none",
-          "description": "Authentication strategy for the configured LLM endpoint."
+          "description": "%configuration.authMode.description%"
         },
         "llmTranslate.authToken": {
           "type": "string",
           "default": "",
-          "markdownDescription": "Token value used when authMode is bearer. Prefer storing secrets in user settings."
+          "markdownDescription": "%configuration.authToken.description%"
         },
         "llmTranslate.authHeaderName": {
           "type": "string",
           "default": "Authorization",
-          "description": "Header name used when authMode is header."
+          "description": "%configuration.authHeaderName.description%"
         },
         "llmTranslate.authHeaderValue": {
           "type": "string",
           "default": "",
-          "markdownDescription": "Header value used when authMode is header. Prefer storing secrets in user settings."
+          "markdownDescription": "%configuration.authHeaderValue.description%"
         },
         "llmTranslate.cacheRoot": {
           "type": "string",
           "default": "~/llm-translate",
-          "description": "Root folder used to store md5 cache files and translated outputs. A per-user subfolder is created automatically."
+          "description": "%configuration.cacheRoot.description%"
         },
         "llmTranslate.requestTimeoutMs": {
           "type": "number",
           "default": 120000,
           "minimum": 5000,
-          "description": "Request timeout in milliseconds for a single translation call."
+          "description": "%configuration.requestTimeoutMs.description%"
         },
         "llmTranslate.temperature": {
           "type": "number",
           "default": 0.1,
           "minimum": 0,
           "maximum": 2,
-          "description": "Sampling temperature sent to the LLM API."
+          "description": "%configuration.temperature.description%"
         }
       }
     }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shezw/llm-translate-vsc-plugin.git"
+  },
+  "homepage": "https://github.com/shezw/llm-translate-vsc-plugin#readme",
+  "bugs": {
+    "url": "https://github.com/shezw/llm-translate-vsc-plugin/issues"
   },
   "scripts": {
     "compile": "tsc -p ./",

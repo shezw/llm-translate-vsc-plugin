@@ -5,8 +5,17 @@ import * as vscode from 'vscode';
 import { CacheManager, computeMd5 } from '../cache/cacheManager';
 import { LlmClient } from '../llm/client';
 import { TranslationPreviewProvider } from '../preview/previewProvider';
-import { buildCodePrompt, buildDocumentPrompt, PromptMetadata, TRANSLATION_SYSTEM_PROMPT } from './prompts';
+import { applyCommentTranslations, extractComments, splitCommentsIntoBatches } from './commentExtractor';
+import {
+  buildCodeCommentBatchPrompt,
+  buildDocumentPrompt,
+  parseCommentTranslationResult,
+  PromptMetadata,
+  TRANSLATION_SYSTEM_PROMPT
+} from './prompts';
 import { getTranslationPlan } from './fileClassifier';
+
+const MAX_COMMENT_BATCH_CHARS = 12000;
 
 export class Translator {
   constructor(
@@ -47,15 +56,10 @@ export class Translator {
       relativePath: artifacts.relativePath
     };
 
-    const userPrompt = plan.mode === 'document'
-      ? buildDocumentPrompt(metadata, sourceContent)
-      : buildCodePrompt(metadata, sourceContent, plan.commentPattern!);
-
     this.previewProvider.update(previewUri, 'LLM translation in progress...');
-    const translatedContent = await this.llmClient.translate({
-      systemPrompt: TRANSLATION_SYSTEM_PROMPT,
-      userPrompt
-    });
+    const translatedContent = plan.mode === 'document'
+      ? await this.translateDocument(sourceContent, metadata)
+      : await this.translateCodeComments(sourceContent, metadata, plan.commentPattern!);
 
     await this.cacheManager.write(sourceDocument.uri, sourceHash, translatedContent);
     this.previewProvider.update(previewUri, translatedContent);
@@ -75,5 +79,51 @@ export class Translator {
     } catch {
       return undefined;
     }
+  }
+
+  private async translateDocument(sourceContent: string, metadata: PromptMetadata): Promise<string> {
+    return this.llmClient.translate({
+      systemPrompt: TRANSLATION_SYSTEM_PROMPT,
+      userPrompt: buildDocumentPrompt(metadata, sourceContent)
+    });
+  }
+
+  private async translateCodeComments(
+    sourceContent: string,
+    metadata: PromptMetadata,
+    commentPattern: NonNullable<ReturnType<typeof getTranslationPlan>['commentPattern']>
+  ): Promise<string> {
+    const segments = extractComments(sourceContent, commentPattern);
+    if (segments.length === 0) {
+      this.outputChannel.appendLine('[llm] no comment segments found; skipping LLM call');
+      return sourceContent;
+    }
+
+    const translatedById = new Map<string, string>();
+    const batches = splitCommentsIntoBatches(segments, MAX_COMMENT_BATCH_CHARS);
+
+    for (const batch of batches) {
+      const userPrompt = buildCodeCommentBatchPrompt(
+        metadata,
+        batch.map(segment => ({
+          id: segment.id,
+          text: segment.text,
+          line: segment.line
+        })),
+        commentPattern
+      );
+
+      const response = await this.llmClient.translate({
+        systemPrompt: TRANSLATION_SYSTEM_PROMPT,
+        userPrompt
+      });
+
+      const parsed = parseCommentTranslationResult(response);
+      for (const item of parsed.translations) {
+        translatedById.set(item.id, item.translatedComment);
+      }
+    }
+
+    return applyCommentTranslations(sourceContent, segments, translatedById);
   }
 }
