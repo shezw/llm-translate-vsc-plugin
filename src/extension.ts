@@ -102,11 +102,29 @@ async function runTranslation(
 }
 
 async function resolveSourceDocument(resource: vscode.Uri | undefined): Promise<vscode.TextDocument | undefined> {
-  if (resource) {
-    return vscode.workspace.openTextDocument(resource);
+  const candidateUri = resource ?? vscode.window.activeTextEditor?.document.uri;
+  if (!candidateUri) {
+    return undefined;
   }
 
-  return vscode.window.activeTextEditor?.document;
+  const sourceUri = resolveSourceUri(candidateUri);
+  return vscode.workspace.openTextDocument(sourceUri);
+}
+
+function resolveSourceUri(uri: vscode.Uri): vscode.Uri {
+  if (uri.scheme !== PREVIEW_SCHEME) {
+    return uri;
+  }
+
+  if (!uri.query) {
+    return uri;
+  }
+
+  try {
+    return vscode.Uri.parse(uri.query, true);
+  } catch {
+    return uri;
+  }
 }
 
 async function setContext(isSupported: boolean, hasTranslation: boolean): Promise<void> {

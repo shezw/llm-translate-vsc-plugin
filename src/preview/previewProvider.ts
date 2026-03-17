@@ -20,7 +20,7 @@ export class TranslationPreviewProvider implements vscode.TextDocumentContentPro
     await vscode.languages.setTextDocumentLanguage(document, languageId);
     await vscode.window.showTextDocument(document, {
       preview: true,
-      preserveFocus: false,
+      preserveFocus: true,
       viewColumn: vscode.ViewColumn.Beside
     });
 
