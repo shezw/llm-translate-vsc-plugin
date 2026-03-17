@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.0.6
+
+- Updated localized context menu labels to use language-specific "translate into" wording.
+- Fixed LLM response parsing for wrapped payloads such as `{ "code": 0, "data": { "content": "..." } }`.
+
 ## 0.0.5
 
 - Added multi-language translation targets: Simplified Chinese, English, German, French, Japanese, and Korean.

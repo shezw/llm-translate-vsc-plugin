@@ -46,7 +46,7 @@ export class LlmClient {
         throw new Error('LLM response did not contain translated content.');
       }
 
-      return stripMarkdownFences(translatedText.trim());
+      return normalizeTranslatedText(translatedText);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.outputChannel.appendLine(`[llm] request failed: ${message}`);
@@ -104,6 +104,11 @@ function extractResponseText(provider: Exclude<ProviderMode, 'auto'>, payload: u
     return undefined;
   }
 
+  const normalizedWrappedPayload = extractWrappedContent(payload);
+  if (normalizedWrappedPayload) {
+    return normalizedWrappedPayload;
+  }
+
   if (provider === 'ollama') {
     const message = payload.message;
     if (isRecord(message) && typeof message.content === 'string') {
@@ -130,6 +135,55 @@ function extractResponseText(provider: Exclude<ProviderMode, 'auto'>, payload: u
         return firstChoice.text;
       }
     }
+  }
+
+  return undefined;
+}
+
+function normalizeTranslatedText(content: string): string {
+  const stripped = stripMarkdownFences(content.trim());
+  const normalizedWrappedPayload = tryExtractWrappedContentFromString(stripped);
+  return normalizedWrappedPayload ?? stripped;
+}
+
+function tryExtractWrappedContentFromString(content: string): string | undefined {
+  const trimmed = content.trim();
+  if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) {
+    return undefined;
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed) as unknown;
+    if (!isRecord(parsed)) {
+      return undefined;
+    }
+
+    return extractWrappedContent(parsed);
+  } catch {
+    return undefined;
+  }
+}
+
+function extractWrappedContent(payload: Record<string, any>): string | undefined {
+  if (typeof payload.content === 'string') {
+    return payload.content;
+  }
+
+  const data = payload.data;
+  if (isRecord(data)) {
+    if (typeof data.content === 'string') {
+      return data.content;
+    }
+
+    const nestedMessage = data.message;
+    if (isRecord(nestedMessage) && typeof nestedMessage.content === 'string') {
+      return nestedMessage.content;
+    }
+  }
+
+  const message = payload.message;
+  if (isRecord(message) && typeof message.content === 'string') {
+    return message.content;
   }
 
   return undefined;
