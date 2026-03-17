@@ -2,7 +2,7 @@
   "name": "llm-translate",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "publisher": "shezw",
   "icon": "media/extension-icon.png",
   "license": "MIT",
@@ -116,18 +116,7 @@
       }
     ],
     "menus": {
-      "editor/title": [
-        {
-          "command": "llmTranslate.translateFile",
-          "when": "resourceScheme == file && llmTranslate.isSupported && !llmTranslate.hasTranslation",
-          "group": "navigation@100"
-        },
-        {
-          "command": "llmTranslate.refreshFile",
-          "when": "resourceScheme == file && llmTranslate.isSupported && llmTranslate.hasTranslation",
-          "group": "navigation@100"
-        }
-      ],
+      "editor/title": [],
       "editor/context": [
         {
           "submenu": "llmTranslate.contextMenu",

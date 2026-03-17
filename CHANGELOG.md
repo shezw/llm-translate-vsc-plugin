@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.0.7
+
+- Removed icon button.
+- Added screenshot functionality.
+
 ## 0.0.6
 
 - Updated localized context menu labels to use language-specific "translate into" wording.

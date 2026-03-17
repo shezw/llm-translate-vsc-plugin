@@ -4,6 +4,8 @@
 
 # LLM Translate
 
+![screenshot](https://raw.githubusercontent.com/shezw/llm-translate-vsc-plugin/main/media/screenshot.png)
+
 LLM Translate is a VS Code extension for translating workspace files with a configurable local or remote LLM service.
 
 ## What it does
