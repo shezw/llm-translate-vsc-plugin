@@ -1,0 +1,27 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="256" height="256" rx="56" fill="url(#bg)"/>
+  <rect x="0" y="0" width="256" height="256" rx="56" fill="url(#dotPattern)"/>
+  <g>
+    <circle cx="62" cy="64" r="4.4" fill="#FFD9B8"/>
+    <circle cx="190" cy="82" r="4.4" fill="#FFD9B8"/>
+    <circle cx="108" cy="170" r="4.4" fill="#FFD9B8"/>
+    <circle cx="172" cy="192" r="4.4" fill="#FFD9B8"/>
+    <circle cx="42" cy="150" r="4.4" fill="#FFD9B8"/>
+    <path d="M62 64L108 108L190 82" stroke="#FFD3AD" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="4 5"/>
+    <path d="M42 150L84 110L108 170" stroke="#FFD3AD" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="4 5"/>
+    <path d="M108 170L140 136L172 192" stroke="#FFD3AD" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="4 5"/>
+  </g>
+  <g>
+    <text x="48" y="156" fill="#FFC7AB" font-size="114" font-weight="700" font-family="PingFang SC, Noto Sans CJK SC, Microsoft YaHei, sans-serif">文</text>
+    <text x="122" y="186" fill="#FFF6EC" font-size="130" font-weight="700" font-family="Inter, Avenir Next, Segoe UI, Arial, sans-serif">A</text>
+  </g>
+  <defs>
+    <linearGradient id="bg" x1="28" y1="22" x2="228" y2="234" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF6B35"/>
+      <stop offset="1" stop-color="#E85D04"/>
+    </linearGradient>
+    <pattern id="dotPattern" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#FFB387"/>
+    </pattern>
+  </defs>
+</svg>

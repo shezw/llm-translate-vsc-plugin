@@ -3,6 +3,7 @@
   "description": "Translate workspace documents and code comments with a configurable remote or local LLM.",
   "command.translate.title": "Translate Current File",
   "command.refresh.title": "Refresh Translation",
+  "submenu.contextMenu.label": "LLM Translate",
   "configuration.title": "LLM Translate",
   "configuration.provider.description": "LLM API provider mode. Auto tries to infer the request and response shape from the endpoint.",
   "configuration.endpoint.description": "HTTP endpoint for the remote or local LLM service, such as an OpenAI-compatible /v1/chat/completions URL or Ollama /api/chat URL.",

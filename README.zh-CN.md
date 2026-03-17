@@ -81,6 +81,33 @@ pnpm exec tsc -p ./
 
 在 VS Code 中按 `F5` 启动扩展开发宿主。
 
+## 本地部署快速引导
+
+1. 安装 LM Studio 或 Ollama。
+2. 加载并运行一个 0.5B 到 8B 左右的模型，例如 `llama-translate 8B`。
+3. 启动本地 API 服务。
+4. 打开 VS Code 设置，在 LLM Translate 中填入对应的接口地址、模型名和鉴权方式。
+
+Ollama 示例：
+
+```json
+{
+	"llmTranslate.provider": "ollama",
+	"llmTranslate.endpoint": "http://127.0.0.1:11434/api/chat",
+	"llmTranslate.model": "llama-translate:8b"
+}
+```
+
+LM Studio 示例：
+
+```json
+{
+	"llmTranslate.provider": "openai-compatible",
+	"llmTranslate.endpoint": "http://127.0.0.1:1234/v1/chat/completions",
+	"llmTranslate.model": "llama-translate-8b-instruct"
+}
+```
+
 ## 打包与发布
 
 ```bash
@@ -92,3 +119,8 @@ pnpm run package
 ```bash
 npx vsce publish
 ```
+
+## 联系方式
+
+- 邮箱：hello@shezw.com
+- X：https://x.com/shezw_cn

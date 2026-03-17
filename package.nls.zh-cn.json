@@ -3,6 +3,7 @@
   "description": "使用可配置的本地或远程 LLM 翻译工作区文档和代码注释。",
   "command.translate.title": "翻译当前文件",
   "command.refresh.title": "刷新翻译",
+  "submenu.contextMenu.label": "LLM Translate",
   "configuration.title": "LLM Translate",
   "configuration.provider.description": "LLM API 提供方模式。选择 auto 时会根据接口地址自动推断请求和响应格式。",
   "configuration.endpoint.description": "本地或远程 LLM 服务的 HTTP 地址，例如 OpenAI 兼容的 /v1/chat/completions 或 Ollama 的 /api/chat。",

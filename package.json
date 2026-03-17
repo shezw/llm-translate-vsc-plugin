@@ -2,8 +2,9 @@
   "name": "llm-translate",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "shezw",
+  "icon": "media/extension-icon.png",
   "license": "MIT",
   "engines": {
     "vscode": "^1.90.0"
@@ -52,6 +53,12 @@
         }
       }
     ],
+    "submenus": [
+      {
+        "id": "llmTranslate.contextMenu",
+        "label": "%submenu.contextMenu.label%"
+      }
+    ],
     "menus": {
       "editor/title": [
         {
@@ -63,6 +70,40 @@
           "command": "llmTranslate.refreshFile",
           "when": "resourceScheme == file && llmTranslate.isSupported && llmTranslate.hasTranslation",
           "group": "navigation@100"
+        }
+      ],
+      "editor/context": [
+        {
+          "submenu": "llmTranslate.contextMenu",
+          "when": "resourceScheme == file && llmTranslate.isSupported",
+          "group": "2_llmTranslate@3"
+        },
+        {
+          "command": "llmTranslate.translateFile",
+          "when": "resourceScheme == file && llmTranslate.isSupported && !llmTranslate.hasTranslation",
+          "group": "llmTranslate@1"
+        },
+        {
+          "command": "llmTranslate.refreshFile",
+          "when": "resourceScheme == file && llmTranslate.isSupported && llmTranslate.hasTranslation",
+          "group": "llmTranslate@2"
+        }
+      ],
+      "explorer/context": [
+        {
+          "submenu": "llmTranslate.contextMenu",
+          "when": "explorerResourceIsFolder == false && resourceScheme == file",
+          "group": "3_llmTranslate@3"
+        },
+        {
+          "command": "llmTranslate.translateFile",
+          "when": "explorerResourceIsFolder == false && resourceScheme == file",
+          "group": "llmTranslate@1"
+        },
+        {
+          "command": "llmTranslate.refreshFile",
+          "when": "explorerResourceIsFolder == false && resourceScheme == file",
+          "group": "llmTranslate@2"
         }
       ],
       "commandPalette": [
