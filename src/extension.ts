@@ -18,7 +18,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   context.subscriptions.push(outputChannel);
   context.subscriptions.push(previewProvider);
-  context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(PREVIEW_SCHEME, previewProvider));
 
   context.subscriptions.push(
     vscode.commands.registerCommand('llmTranslate.translateFile', async (resource?: vscode.Uri) => {

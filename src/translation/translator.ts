@@ -42,10 +42,22 @@ export class Translator {
       sourceDocument.languageId
     );
 
+    this.previewProvider.update(previewUri, {
+      content: '',
+      sourceLabel: `${artifacts.relativePath} -> ${targetLanguage}`,
+      languageId: sourceDocument.languageId,
+      status: forceRefresh ? 'Refreshing translation...' : 'Waiting for model response...',
+      isStreaming: true
+    });
+
     if (!forceRefresh && (await this.cacheManager.isUpToDate(sourceDocument.uri, sourceHash, targetLanguage))) {
       const cachedTranslation = await this.cacheManager.readTranslation(sourceDocument.uri, targetLanguage);
       if (cachedTranslation !== undefined) {
-        this.previewProvider.update(previewUri, cachedTranslation);
+        this.previewProvider.update(previewUri, {
+          content: cachedTranslation,
+          status: 'Loaded from cache',
+          isStreaming: false
+        });
         this.outputChannel.appendLine(`[cache] reused translation: ${artifacts.translatedFilePath}`);
         return;
       }
@@ -58,13 +70,21 @@ export class Translator {
       targetLanguage
     };
 
-    this.previewProvider.update(previewUri, 'LLM translation in progress...');
+    this.previewProvider.update(previewUri, {
+      content: '',
+      status: 'LLM translation in progress...',
+      isStreaming: true
+    });
     const translatedContent = plan.mode === 'document'
-      ? await this.translateDocument(sourceContent, metadata)
-      : await this.translateCodeComments(sourceContent, metadata, plan.commentPattern!);
+      ? await this.translateDocument(sourceContent, metadata, previewUri)
+      : await this.translateCodeComments(sourceContent, metadata, plan.commentPattern!, previewUri);
 
     await this.cacheManager.write(sourceDocument.uri, sourceHash, translatedContent, targetLanguage);
-    this.previewProvider.update(previewUri, translatedContent);
+    this.previewProvider.update(previewUri, {
+      content: translatedContent,
+      status: 'Translation ready',
+      isStreaming: false
+    });
     this.outputChannel.appendLine(`[cache] wrote translation: ${artifacts.translatedFilePath}`);
   }
 
@@ -83,28 +103,55 @@ export class Translator {
     }
   }
 
-  private async translateDocument(sourceContent: string, metadata: PromptMetadata): Promise<string> {
+  private async translateDocument(sourceContent: string, metadata: PromptMetadata, previewUri: vscode.Uri): Promise<string> {
     return this.llmClient.translate({
       systemPrompt: TRANSLATION_SYSTEM_PROMPT,
       userPrompt: buildDocumentPrompt(metadata, sourceContent)
+    }, {
+      onStart: () => {
+        this.previewProvider.update(previewUri, {
+          content: '',
+          status: 'Streaming translation...',
+          isStreaming: true
+        });
+      },
+      onUpdate: content => {
+        this.previewProvider.update(previewUri, {
+          content,
+          status: 'Streaming translation...',
+          isStreaming: true
+        });
+      }
     });
   }
 
   private async translateCodeComments(
     sourceContent: string,
     metadata: PromptMetadata,
-    commentPattern: NonNullable<ReturnType<typeof getTranslationPlan>['commentPattern']>
+    commentPattern: NonNullable<ReturnType<typeof getTranslationPlan>['commentPattern']>,
+    previewUri: vscode.Uri
   ): Promise<string> {
     const segments = extractComments(sourceContent, commentPattern);
     if (segments.length === 0) {
       this.outputChannel.appendLine('[llm] no comment segments found; skipping LLM call');
+      this.previewProvider.update(previewUri, {
+        content: sourceContent,
+        status: 'No comments found to translate',
+        isStreaming: false
+      });
       return sourceContent;
     }
 
     const translatedById = new Map<string, string>();
     const batches = splitCommentsIntoBatches(segments, MAX_COMMENT_BATCH_CHARS);
 
-    for (const batch of batches) {
+    for (const [index, batch] of batches.entries()) {
+      this.previewProvider.update(previewUri, {
+        content: applyCommentTranslations(sourceContent, segments, translatedById),
+        status: `Translating comment batch ${index + 1}/${batches.length}...`,
+        isStreaming: true
+      });
+
       const userPrompt = buildCodeCommentBatchPrompt(
         metadata,
         batch.map(segment => ({
@@ -118,12 +165,26 @@ export class Translator {
       const response = await this.llmClient.translate({
         systemPrompt: TRANSLATION_SYSTEM_PROMPT,
         userPrompt
+      }, {
+        onStart: () => {
+          this.previewProvider.update(previewUri, {
+            content: applyCommentTranslations(sourceContent, segments, translatedById),
+            status: `Waiting for batch ${index + 1}/${batches.length}...`,
+            isStreaming: true
+          });
+        }
       });
 
       const parsed = parseCommentTranslationResult(response);
       for (const item of parsed.translations) {
         translatedById.set(item.id, item.translatedComment);
       }
+
+      this.previewProvider.update(previewUri, {
+        content: applyCommentTranslations(sourceContent, segments, translatedById),
+        status: `Applied comment batch ${index + 1}/${batches.length}`,
+        isStreaming: index < batches.length - 1
+      });
     }
 
     return applyCommentTranslations(sourceContent, segments, translatedById);

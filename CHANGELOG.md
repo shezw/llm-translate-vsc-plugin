@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.1.0
+
+- Added a streaming translation preview panel with incremental response updates.
+- Added a glowing waiting-state border to the translation preview while the model is responding.
+- Reworked preview handling so translation results render in a webview instead of a virtual text document.
+- Updated screenshot assets for the extension page.
+
 ## 0.0.7
 
 - Removed icon button.
