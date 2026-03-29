@@ -7,11 +7,11 @@ import { LlmClient } from '../llm/client';
 import { TranslationPreviewProvider } from '../preview/previewProvider';
 import { applyCommentTranslations, extractComments, splitCommentsIntoBatches } from './commentExtractor';
 import {
+  buildTranslationSystemPrompt,
   buildCodeCommentBatchPrompt,
   buildDocumentPrompt,
   parseCommentTranslationResult,
   PromptMetadata,
-  TRANSLATION_SYSTEM_PROMPT
 } from './prompts';
 import { getTranslationPlan } from './fileClassifier';
 import { TargetLanguage } from './targetLanguages';
@@ -105,7 +105,7 @@ export class Translator {
 
   private async translateDocument(sourceContent: string, metadata: PromptMetadata, previewUri: vscode.Uri): Promise<string> {
     return this.llmClient.translate({
-      systemPrompt: TRANSLATION_SYSTEM_PROMPT,
+      systemPrompt: buildTranslationSystemPrompt(metadata),
       userPrompt: buildDocumentPrompt(metadata, sourceContent)
     }, {
       onStart: () => {
@@ -163,7 +163,7 @@ export class Translator {
       );
 
       const response = await this.llmClient.translate({
-        systemPrompt: TRANSLATION_SYSTEM_PROMPT,
+        systemPrompt: buildTranslationSystemPrompt(metadata),
         userPrompt
       }, {
         onStart: () => {

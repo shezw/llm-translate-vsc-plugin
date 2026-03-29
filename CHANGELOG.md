@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.1.1
+
+- Moved the target language requirement into the system prompt.
+- Strengthened prompt rules so the model is explicitly constrained to answer only in the selected target language.
+
 ## 0.1.0
 
 - Added a streaming translation preview panel with incremental response updates.

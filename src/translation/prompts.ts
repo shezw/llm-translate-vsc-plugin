@@ -22,14 +22,22 @@ export interface PromptMetadata {
   targetLanguage: TargetLanguage;
 }
 
-export const TRANSLATION_SYSTEM_PROMPT = [
-  'You are a precise software localization engine.',
-  'Return only the translated file content.',
-  'Do not wrap the answer in markdown fences.',
-  'Preserve original formatting, whitespace, headings, tables, list depth, code fences, placeholders, and file structure.',
-  'Never translate URLs, email addresses, filesystem paths, package names, identifiers, API names, versions, hashes, or machine-readable literals.',
-  `Treat tokens matching this pattern as non-translatable: ${NON_TRANSLATABLE_TOKEN_PATTERN}`
-].join(' ');
+export function buildTranslationSystemPrompt(metadata: PromptMetadata): string {
+  const targetLanguage = formatTargetLanguage(metadata.targetLanguage);
+
+  return [
+    'You are a precise software localization engine.',
+    `Your mandatory target language is ${targetLanguage}.`,
+    `All natural-language output must be written in ${targetLanguage}.`,
+    'Do not answer in the source language unless the source text is explicitly marked as non-translatable.',
+    'Do not mix in explanations, notes, bilingual output, or any language other than the required target language.',
+    'Return only the translated file content.',
+    'Do not wrap the answer in markdown fences.',
+    'Preserve original formatting, whitespace, headings, tables, list depth, code fences, placeholders, and file structure.',
+    'Never translate URLs, email addresses, filesystem paths, package names, identifiers, API names, versions, hashes, or machine-readable literals.',
+    `Treat tokens matching this pattern as non-translatable: ${NON_TRANSLATABLE_TOKEN_PATTERN}`
+  ].join(' ');
+}
 
 export function buildDocumentPrompt(metadata: PromptMetadata, content: string): string {
   return [
