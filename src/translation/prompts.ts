@@ -41,11 +41,10 @@ export function buildTranslationSystemPrompt(metadata: PromptMetadata): string {
 
 export function buildDocumentPrompt(metadata: PromptMetadata, content: string): string {
   return [
-    `Translate the full documentation file into ${formatTargetLanguage(metadata.targetLanguage)}.`,
+    'Translate the full documentation file.',
     'Preserve the original file format exactly and keep code blocks executable.',
     'Translate human-readable prose, headings, tables, alt text, and inline comments inside fenced examples only when they are natural language.',
     'Do not change YAML front matter keys, markdown syntax, HTML tags, URLs, emails, or code identifiers.',
-    `Target language: ${formatTargetLanguage(metadata.targetLanguage)}`,
     `File name: ${metadata.fileName}`,
     `Extension: ${metadata.extension || '(none)'}`,
     `Relative path: ${metadata.relativePath}`,
@@ -56,11 +55,10 @@ export function buildDocumentPrompt(metadata: PromptMetadata, content: string): 
 
 export function buildCodePrompt(metadata: PromptMetadata, content: string, commentPattern: CommentPattern): string {
   return [
-    `Translate only comments and documentation text inside the source file into ${formatTargetLanguage(metadata.targetLanguage)}.`,
+    'Translate only comments and documentation text inside the source file.',
     'Keep all executable code, imports, symbols, strings, numbers, URLs, emails, file paths, and configuration literals unchanged.',
     'Preserve comment delimiters, indentation, line breaks, and code layout exactly.',
     'If a comment mixes code tokens with natural language, translate only the natural language portions.',
-    `Target language: ${formatTargetLanguage(metadata.targetLanguage)}`,
     `File name: ${metadata.fileName}`,
     `Extension: ${metadata.extension || '(none)'}`,
     `Relative path: ${metadata.relativePath}`,
@@ -76,12 +74,11 @@ export function buildCodeCommentBatchPrompt(
   commentPattern: CommentPattern
 ): string {
   return [
-    `Translate only the human-readable parts of the extracted comments into ${formatTargetLanguage(metadata.targetLanguage)}.`,
+    'Translate only the human-readable parts of the extracted comments.',
     'You are not translating the whole source file. You are translating comment snippets extracted from the file.',
     'Keep comment delimiters, indentation, leading stars, spacing, line breaks, URLs, emails, file paths, identifiers, versions, placeholders, and machine-readable literals unchanged.',
     'Return JSON only with this exact shape: {"translations":[{"id":"...","translatedComment":"..."}]}.',
     'Every input item must appear exactly once in the output. Do not omit or reorder items.',
-    `Target language: ${formatTargetLanguage(metadata.targetLanguage)}`,
     `File name: ${metadata.fileName}`,
     `Extension: ${metadata.extension || '(none)'}`,
     `Relative path: ${metadata.relativePath}`,

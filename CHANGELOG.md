@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.1.2
+
+- Removed redundant target-language instructions from user prompts so the selected language is enforced only through the system prompt.
+
 ## 0.1.1
 
 - Moved the target language requirement into the system prompt.
