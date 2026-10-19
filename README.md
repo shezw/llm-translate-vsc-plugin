@@ -70,7 +70,7 @@ Required settings:
 Optional settings:
 
 - `llmTranslate.provider`: `auto`, `openai-compatible`, or `ollama`.
-- `llmTranslate.defaultTargetLanguage`: `zh-CN`, `en`, `de`, `fr`, `ja`, or `ko`.
+- `llmTranslate.defaultTargetLanguage`: `zh-CN`, `en`, `pt-BR`, `de`, `fr`, `ja`, or `ko`.
 - `llmTranslate.authMode`: `none`, `bearer`, or `header`.
 - `llmTranslate.authToken`
 - `llmTranslate.authHeaderName`

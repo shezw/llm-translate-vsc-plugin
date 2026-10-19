@@ -1,4 +1,4 @@
-export type TargetLanguage = 'zh-CN' | 'en' | 'de' | 'fr' | 'ja' | 'ko';
+export type TargetLanguage = 'zh-CN' | 'en' | 'pt-BR' | 'de' | 'fr' | 'ja' | 'ko';
 
 export interface TargetLanguageDefinition {
   id: TargetLanguage;
@@ -10,6 +10,7 @@ export interface TargetLanguageDefinition {
 export const TARGET_LANGUAGES: TargetLanguageDefinition[] = [
   { id: 'zh-CN', label: 'Chinese', englishName: 'Simplified Chinese', nativeName: '简体中文' },
   { id: 'en', label: 'English', englishName: 'English', nativeName: 'English' },
+  { id: 'pt-BR', label: 'Portuguese (Brazil)', englishName: 'Brazilian Portuguese', nativeName: 'Português do Brasil' },
   { id: 'de', label: 'German', englishName: 'German', nativeName: 'Deutsch' },
   { id: 'fr', label: 'French', englishName: 'French', nativeName: 'Français' },
   { id: 'ja', label: 'Japanese', englishName: 'Japanese', nativeName: '日本語' },
