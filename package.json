@@ -61,6 +61,10 @@
         "title": "%command.translate.en.title%"
       },
       {
+        "command": "llmTranslate.translate.pt-BR",
+        "title": "%command.translate.pt-BR.title%"
+      },
+      {
         "command": "llmTranslate.translate.de",
         "title": "%command.translate.de.title%"
       },
@@ -83,6 +87,10 @@
       {
         "command": "llmTranslate.refresh.en",
         "title": "%command.refresh.en.title%"
+      },
+      {
+        "command": "llmTranslate.refresh.pt-BR",
+        "title": "%command.refresh.pt-BR.title%"
       },
       {
         "command": "llmTranslate.refresh.de",
@@ -151,20 +159,24 @@
           "group": "2"
         },
         {
-          "command": "llmTranslate.translate.de",
+          "command": "llmTranslate.translate.pt-BR",
           "group": "3"
         },
         {
-          "command": "llmTranslate.translate.fr",
+          "command": "llmTranslate.translate.de",
           "group": "4"
         },
         {
-          "command": "llmTranslate.translate.ja",
+          "command": "llmTranslate.translate.fr",
           "group": "5"
         },
         {
-          "command": "llmTranslate.translate.ko",
+          "command": "llmTranslate.translate.ja",
           "group": "6"
+        },
+        {
+          "command": "llmTranslate.translate.ko",
+          "group": "7"
         }
       ],
       "llmTranslate.refreshToMenu": [
@@ -177,20 +189,24 @@
           "group": "2"
         },
         {
-          "command": "llmTranslate.refresh.de",
+          "command": "llmTranslate.refresh.pt-BR",
           "group": "3"
         },
         {
-          "command": "llmTranslate.refresh.fr",
+          "command": "llmTranslate.refresh.de",
           "group": "4"
         },
         {
-          "command": "llmTranslate.refresh.ja",
+          "command": "llmTranslate.refresh.fr",
           "group": "5"
         },
         {
-          "command": "llmTranslate.refresh.ko",
+          "command": "llmTranslate.refresh.ja",
           "group": "6"
+        },
+        {
+          "command": "llmTranslate.refresh.ko",
+          "group": "7"
         }
       ],
       "commandPalette": [
@@ -211,6 +227,10 @@
           "when": "resourceScheme == file"
         },
         {
+          "command": "llmTranslate.translate.pt-BR",
+          "when": "resourceScheme == file"
+        },
+        {
           "command": "llmTranslate.translate.de",
           "when": "resourceScheme == file"
         },
@@ -232,6 +252,10 @@
         },
         {
           "command": "llmTranslate.refresh.en",
+          "when": "resourceScheme == file"
+        },
+        {
+          "command": "llmTranslate.refresh.pt-BR",
           "when": "resourceScheme == file"
         },
         {
@@ -280,6 +304,7 @@
           "enum": [
             "zh-CN",
             "en",
+            "pt-BR",
             "de",
             "fr",
             "ja",
@@ -288,6 +313,7 @@
           "enumItemLabels": [
             "%language.zh-CN.label%",
             "%language.en.label%",
+            "%language.pt-BR.label%",
             "%language.de.label%",
             "%language.fr.label%",
             "%language.ja.label%",

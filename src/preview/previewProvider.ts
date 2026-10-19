@@ -1,6 +1,18 @@
 import * as vscode from 'vscode';
 
 import { PREVIEW_SCHEME } from '../constants';
+import { TargetLanguage } from '../translation/targetLanguages';
+
+export type PreviewAction = 'replace-original' | 'save-beside';
+
+export interface PreviewActionRequest {
+  action: PreviewAction;
+  sourceUri: vscode.Uri;
+  targetLanguage: TargetLanguage;
+  translatedContent: string;
+}
+
+export type PreviewActionHandler = (request: PreviewActionRequest) => Promise<string>;
 
 interface PreviewUpdate {
   content: string;
@@ -14,13 +26,26 @@ interface PreviewEntry {
   panel: vscode.WebviewPanel;
   title: string;
   state: Required<PreviewUpdate>;
+  sourceUri: vscode.Uri;
+  targetLanguage: TargetLanguage;
 }
 
 export class TranslationPreviewProvider implements vscode.Disposable {
   private readonly panels = new Map<string, PreviewEntry>();
   private readonly disposables: vscode.Disposable[] = [];
+  private actionHandler: PreviewActionHandler | undefined;
 
-  async openPreview(sourceUri: vscode.Uri, title: string, initialContent: string, languageId: string): Promise<vscode.Uri> {
+  setActionHandler(handler: PreviewActionHandler): void {
+    this.actionHandler = handler;
+  }
+
+  async openPreview(
+    sourceUri: vscode.Uri,
+    title: string,
+    initialContent: string,
+    languageId: string,
+    targetLanguage: TargetLanguage
+  ): Promise<vscode.Uri> {
     const previewUri = this.createPreviewUri(sourceUri, title);
     const key = previewUri.toString();
     const existing = this.panels.get(key);
@@ -56,15 +81,63 @@ export class TranslationPreviewProvider implements vscode.Disposable {
 
     panel.webview.html = this.renderHtml(panel.webview, title, state);
 
+    let messageHandle: vscode.Disposable | undefined;
     const disposeHandle = panel.onDidDispose(() => {
       this.panels.delete(key);
+      messageHandle?.dispose();
       disposeHandle.dispose();
     });
 
     this.panels.set(key, {
       panel,
       title,
-      state
+      state,
+      sourceUri,
+      targetLanguage
+    });
+
+    messageHandle = panel.webview.onDidReceiveMessage(async message => {
+      const entry = this.panels.get(key);
+      const action = message?.type === 'applyTranslation' ? message.action : undefined;
+      if (!entry || (action !== 'replace-original' && action !== 'save-beside') || entry.state.isStreaming) {
+        return;
+      }
+
+      if (!this.actionHandler) {
+        this.update(previewUri, {
+          content: entry.state.content,
+          status: 'Save action is unavailable.',
+          isStreaming: false
+        });
+        return;
+      }
+
+      this.update(previewUri, {
+        content: entry.state.content,
+        status: 'Saving translation...',
+        isStreaming: true
+      });
+
+      try {
+        const status = await this.actionHandler({
+          action,
+          sourceUri: entry.sourceUri,
+          targetLanguage: entry.targetLanguage,
+          translatedContent: entry.state.content
+        });
+        this.update(previewUri, {
+          content: entry.state.content,
+          status,
+          isStreaming: false
+        });
+      } catch (error) {
+        const messageText = error instanceof Error ? error.message : String(error);
+        this.update(previewUri, {
+          content: entry.state.content,
+          status: `Save failed: ${messageText}`,
+          isStreaming: false
+        });
+      }
     });
 
     panel.reveal(vscode.ViewColumn.Beside, true);
@@ -216,6 +289,29 @@ export class TranslationPreviewProvider implements vscode.Disposable {
       background: var(--accent-soft);
       border: 1px solid rgba(255, 159, 92, 0.24);
     }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px 18px 0;
+    }
+    button {
+      border: 1px solid rgba(255, 159, 92, 0.4);
+      border-radius: 7px;
+      padding: 7px 10px;
+      color: var(--text);
+      background: rgba(255, 143, 71, 0.12);
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+    }
+    button:hover:not(:disabled) {
+      background: rgba(255, 143, 71, 0.24);
+    }
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
     .body {
       padding: 18px;
     }
@@ -240,6 +336,10 @@ export class TranslationPreviewProvider implements vscode.Disposable {
         </div>
         <div id="badge" class="badge">${escapeHtml(state.status)}</div>
       </header>
+      <div class="actions">
+        <button id="replaceButton" type="button">Replace original</button>
+        <button id="saveBesideButton" type="button">Save beside original</button>
+      </div>
       <div class="body">
         <pre id="content">${escapeHtml(state.content)}</pre>
       </div>
@@ -252,13 +352,25 @@ export class TranslationPreviewProvider implements vscode.Disposable {
     const sourceNode = document.getElementById('source');
     const badgeNode = document.getElementById('badge');
     const contentNode = document.getElementById('content');
+    const replaceButton = document.getElementById('replaceButton');
+    const saveBesideButton = document.getElementById('saveBesideButton');
 
     function render(next) {
       sourceNode.textContent = next.sourceLabel || '';
       badgeNode.textContent = next.status || '';
       contentNode.textContent = next.content || '';
       card.classList.toggle('streaming', Boolean(next.isStreaming));
+      replaceButton.disabled = Boolean(next.isStreaming);
+      saveBesideButton.disabled = Boolean(next.isStreaming);
     }
+
+    replaceButton.addEventListener('click', () => {
+      vscode.postMessage({ type: 'applyTranslation', action: 'replace-original' });
+    });
+
+    saveBesideButton.addEventListener('click', () => {
+      vscode.postMessage({ type: 'applyTranslation', action: 'save-beside' });
+    });
 
     render(state);
 

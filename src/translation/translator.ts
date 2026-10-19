@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 
 import { CacheManager, computeMd5 } from '../cache/cacheManager';
 import { LlmClient } from '../llm/client';
-import { TranslationPreviewProvider } from '../preview/previewProvider';
+import { PreviewAction, TranslationPreviewProvider } from '../preview/previewProvider';
 import { applyCommentTranslations, extractComments, splitCommentsIntoBatches } from './commentExtractor';
 import {
   buildTranslationSystemPrompt,
@@ -39,7 +39,8 @@ export class Translator {
       sourceDocument.uri,
       `${path.basename(artifacts.translatedFilePath)}`,
       forceRefresh ? 'Refreshing translation...' : 'Preparing translation...',
-      sourceDocument.languageId
+      sourceDocument.languageId,
+      targetLanguage
     );
 
     this.previewProvider.update(previewUri, {
@@ -100,6 +101,72 @@ export class Translator {
       return await fs.readFile(translatedFilePath, 'utf8');
     } catch {
       return undefined;
+    }
+  }
+
+  async savePreviewTranslation(
+    sourceUri: vscode.Uri,
+    targetLanguage: TargetLanguage,
+    translatedContent: string,
+    action: PreviewAction
+  ): Promise<string> {
+    const sourceDocument = await vscode.workspace.openTextDocument(sourceUri);
+    const sourceHash = computeMd5(sourceDocument.getText());
+    if (!(await this.cacheManager.isUpToDate(sourceUri, sourceHash, targetLanguage))) {
+      throw new Error('The source file changed after this translation. Translate it again before saving.');
+    }
+
+    if (action === 'replace-original') {
+      const confirmation = await vscode.window.showWarningMessage(
+        `Replace the original file "${path.basename(sourceUri.fsPath)}" with this translation?`,
+        { modal: true },
+        'Replace original'
+      );
+      if (confirmation !== 'Replace original') {
+        return 'Save cancelled.';
+      }
+
+      const fullRange = new vscode.Range(
+        sourceDocument.positionAt(0),
+        sourceDocument.positionAt(sourceDocument.getText().length)
+      );
+      const edit = new vscode.WorkspaceEdit();
+      edit.replace(sourceUri, fullRange, translatedContent);
+      if (!(await vscode.workspace.applyEdit(edit)) || !(await sourceDocument.save())) {
+        throw new Error('VS Code could not save the original file.');
+      }
+
+      return `Original file replaced: ${path.basename(sourceUri.fsPath)}`;
+    }
+
+    const translatedUri = this.getBesideFileUri(sourceUri, targetLanguage);
+    if (await this.fileExists(translatedUri)) {
+      const confirmation = await vscode.window.showWarningMessage(
+        `The file "${path.basename(translatedUri.fsPath)}" already exists. Replace it?`,
+        { modal: true },
+        'Replace file'
+      );
+      if (confirmation !== 'Replace file') {
+        return 'Save cancelled.';
+      }
+    }
+
+    await vscode.workspace.fs.writeFile(translatedUri, Buffer.from(translatedContent, 'utf8'));
+    return `Translation saved beside original: ${path.basename(translatedUri.fsPath)}`;
+  }
+
+  private getBesideFileUri(sourceUri: vscode.Uri, targetLanguage: TargetLanguage): vscode.Uri {
+    const parsedPath = path.parse(sourceUri.fsPath);
+    const translatedName = `${parsedPath.name}.${targetLanguage}${parsedPath.ext}`;
+    return vscode.Uri.file(path.join(parsedPath.dir, translatedName));
+  }
+
+  private async fileExists(fileUri: vscode.Uri): Promise<boolean> {
+    try {
+      await vscode.workspace.fs.stat(fileUri);
+      return true;
+    } catch {
+      return false;
     }
   }
 
