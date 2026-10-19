@@ -15,6 +15,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const previewProvider = new TranslationPreviewProvider();
   const llmClient = new LlmClient(outputChannel);
   const translator = new Translator(cacheManager, llmClient, previewProvider, outputChannel);
+  previewProvider.setActionHandler(async request => {
+    return translator.savePreviewTranslation(
+      request.sourceUri,
+      request.targetLanguage,
+      request.translatedContent,
+      request.action
+    );
+  });
 
   context.subscriptions.push(outputChannel);
   context.subscriptions.push(previewProvider);

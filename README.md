@@ -28,6 +28,15 @@ For a source file inside the current workspace, the extension writes two files u
 
 The hash file contains the current source md5. If the md5 matches and a translated output exists, the extension reuses the cached translation instead of calling the LLM again.
 
+## Saving a translation from the preview
+
+When a translation finishes, the preview provides two actions:
+
+- `Replace original`: replaces the original file after confirmation and keeps its original filename.
+- `Save beside original`: writes a sibling file using the pattern `filename.<language><ext>`, such as `README.pt-BR.md`.
+
+The extension refuses to save if the source file changed after the preview was generated; translate the file again in that case.
+
 ## Supported translation modes
 
 ### Documentation mode
